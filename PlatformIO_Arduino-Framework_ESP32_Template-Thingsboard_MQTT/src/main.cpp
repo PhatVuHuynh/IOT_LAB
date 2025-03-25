@@ -1,98 +1,6 @@
-// #ifdef ESP8266
-// #include <ESP8266WiFi.h>
-// #else
-// #ifdef ESP32
-// #include <WiFi.h>
-// #endif // ESP32
-// #endif // ESP8266
-
-// #include <Arduino_MQTT_Client.h>
-// #include <ThingsBoard.h>
-
-// #define ENCRYPTED false
-
-// constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
-// constexpr char WIFI_PASSWORD[] = "";
-// constexpr char TOKEN[] = "d3P1weVrXAvkGj2bqkDW";
-// constexpr char THINGSBOARD_SERVER[] = "app.coreiot.io";
-
-// #if ENCRYPTED
-// constexpr uint16_t THINGSBOARD_PORT = 8883U;
-// #else
-// constexpr uint16_t THINGSBOARD_PORT = 1883U;
-// #endif
-
-// constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 256U;
-// constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 256U;
-// constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
-
-// #if ENCRYPTED
-// WiFiClientSecure espClient;
-// #else
-// WiFiClient espClient;
-// #endif
-
-// Arduino_MQTT_Client mqttClient(espClient);
-// ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE);
-
-// void InitWiFi() {
-//   Serial.println("Connecting to AP ...");
-//   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-//   while (WiFi.status() != WL_CONNECTED) {
-//     delay(500);
-//     Serial.print(".");
-//   }
-//   Serial.println("Connected to AP");
-// }
-
-// bool reconnect() {
-//   if (WiFi.status() == WL_CONNECTED) {
-//     return true;
-//   }
-//   InitWiFi();
-//   return true;
-// }
-
-// void setup() {
-//   Serial.begin(SERIAL_DEBUG_BAUD);
-//   delay(1000);
-//   InitWiFi();
-// }
-
-// void loop() {
-//   delay(1000);
-
-//   if (!reconnect()) {
-//     return;
-//   }
-
-//   if (!tb.connected()) {
-//     Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
-//     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
-//       Serial.println("Failed to connect");
-//       return;
-//     }
-//   }
-
-//   // Create a JSON document
-//   StaticJsonDocument<256> doc;
-//   doc["temperature"] = random(20, 30);  // Example: Simulating a temperature reading
-
-//   // Serialize the JSON document
-//   char buffer[256];
-//   size_t len = serializeJson(doc, buffer, sizeof(buffer));
-
-//   // Send telemetry data
-//   if (!tb.sendTelemetryJson(doc, len)) {
-//     Serial.println("Failed to send telemetry");
-//   }
-
-//   tb.loop();
-// }
-
-
 #include <Arduino.h>
 #include <DHT20.h>
+#include <Server_Side_RPC.h>
 
 #include <WiFi.h>
 #include <Arduino_MQTT_Client.h>
@@ -153,11 +61,26 @@ constexpr std::array<const char *, 4U> SHARED_ATTRIBUTES_LIST = {
   HUMID_INTERVAL_ATTR,
 };
 
+constexpr uint8_t MAX_RPC_SUBSCRIPTIONS = 3U;
+constexpr uint8_t MAX_RPC_RESPONSE = 5U;
+
+Server_Side_RPC<MAX_RPC_SUBSCRIPTIONS, MAX_RPC_RESPONSE> rpc;
+
 WiFiClient wifiClient;
 Arduino_MQTT_Client mqttClient(wifiClient);
 ThingsBoard tb(mqttClient, MAX_MESSAGE_SIZE);
 
 DHT20 dht20;
+
+time_t now;
+struct tm timeinfo;
+
+TaskHandle_t xdht20Handle = NULL;
+TaskHandle_t xHandle = NULL;
+
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 7;
+const int   daylightOffset_sec = 3600;
 
 
 
@@ -168,9 +91,14 @@ DHT20 dht20;
 // DHT20 dht20;
 float temp = 29.0;
 float humid = 40.0;
-// int light = 50;
-// float longi = 106.80633605864662;
-// float lat = 10.880018410410052;
+bool dht20State = true;
+
+uint32_t turnOnSchedule; 
+uint32_t turnOffSchedule; 
+bool subscribed = false;
+constexpr char RPC_TEMPERATURE_KEY[] = "dht20State";
+constexpr char RPC_TURNON_KEY[] = "turnOnPeriod";
+constexpr char RPC_TURNOFF_KEY[] = "turnOffPeriod";
 
 void TaskLEDControl(void *pvParameters) {
   pinMode(LED, OUTPUT); // Initialize LED pin
@@ -210,9 +138,9 @@ void TaskTemperature_Humidity(void *pvParameters){
     temp = dht20.getTemperature();
     humid = dht20.getHumidity();
 
-    Serial.print("Temp: "); Serial.print(temp); Serial.print(" *C ");
-    Serial.print(" Humidity: "); Serial.print(humid); Serial.print(" %");
-    Serial.println();
+    // Serial.print("Temp: "); Serial.print(temp); Serial.print(" *C ");
+    // Serial.print(" Humidity: "); Serial.print(humid); Serial.print(" %");
+    // Serial.println();
     
     // temp += 1;
     // humid += 1;
@@ -223,6 +151,18 @@ void TaskTemperature_Humidity(void *pvParameters){
 
 void ThingsBoardTask(void *pvParameters) {
     Serial.print("Connecting to ThingsBoard...");
+    if(!subscribed){
+      const std::array<RPC_Callback, MAX_RPC_SUBSCRIPTIONS> callbacks = {
+      // Requires additional memory in the JsonDocument for the JsonDocument that will be copied into the response
+      RPC_Callback{ RPC_TEMPERATURE_KEY, processDHT20State },
+      RPC_Callback{ RPC_TURNON_KEY, processDHT20Scheduler },
+      RPC_Callback{ RPC_TURNOFF_KEY, processDHT20Scheduler }
+      };
+      // Perform a subscription. All consequent data processing will happen in
+      // processTemperatureChange() and processSwitchChange() functions,
+      // as denoted by callbacks array.
+      subscribed = rpc.RPC_Subscribe(callbacks.begin(), callbacks.end());
+    }
     
     while (1)
     {
@@ -292,17 +232,18 @@ void ThingsBoardTask(void *pvParameters) {
       // Attempt to send telemetry data with retries
       const int maxRetries = 3;
       for (int attempt = 0; attempt < maxRetries; ++attempt) {
-          if (tb.sendTelemetryJson(doc, len)) {
-              Serial.println("Telemetry sent successfully");
+          // if (tb.sendTelemetryJson(doc, len)) {
+          if (tb.sendAttributeJson(doc, len)) {
+              Serial.println("Attribute sent successfully");
               break; // Exit if successful
           } else {
-              Serial.println("Failed to send telemetry, retrying...");
+              Serial.println("Failed to send attribute, retrying...");
               vTaskDelay(1000 / portTICK_PERIOD_MS);
 
               if(attempt == 2){
 
                 // Serial.println((int)time(NULL));
-                Serial.println("Failed to send telemetry after multiple attempts");
+                Serial.println("Failed to send attribute after multiple attempts");
               }
               
           }
@@ -325,7 +266,46 @@ void WifiTask(void *pvParameters) {
     }
     Serial.println("Wifi connected");
 
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
+
+    // if (setenv("TZ", "CST-7", 1) != 0) {
+    //   ESP_LOGE("setenv", "cant set time zone");
+    // }
+
+    // // Update the timezone settings
+    // tzset();
+
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    // Is time set? If not, tm_year will be (1970 - 1900).
+    if (timeinfo.tm_year < (2025 - 1900)) {
+        ESP_LOGI("time", "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+        // obtain_time();
+        // update 'now' variable with current time
+        time(&now);
+    }
+    Serial.printf("Current local time in Vietnam: %s", asctime(&timeinfo));
+
     vTaskDelete(NULL);
+}
+
+void TaskScheduler(void *pvParameters) {
+  while(1){
+    time(&now);
+
+    if(now >= turnOffSchedule){
+      vTaskSuspend(xdht20Handle);
+    }
+
+    if(now >= turnOnSchedule){
+      vTaskResume(xdht20Handle);
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+
+  vTaskDelete(NULL);
 }
 
 void onMessageReceived(const String &topic, const String &payload) {
@@ -360,6 +340,33 @@ void onSubscriptionSuccess(void *pvParameters) {
     vTaskDelete(NULL);
 }
 
+// void rpcCallback(const String &method, const String &params) {
+  // Serial.println("RPC Method: " + method);
+  // Serial.println("Params: " + params);
+  // if (method == "setSchedule") {
+  //   schedule = params; // Store the new schedule
+  //   Serial.println("Schedule set: " + schedule);
+  // }
+//}
+
+// Callback function for RPC response
+void processDHT20State(const JsonVariantConst &data, JsonDocument &response) {
+  dht20State = data[RPC_TEMPERATURE_KEY];
+  Serial.print("DHT20 state: ");
+  Serial.println(dht20State);
+}
+
+void processDHT20Scheduler(const JsonVariantConst &data, JsonDocument &response) {
+  if(data[RPC_TURNON_KEY]){
+    turnOnSchedule = data[RPC_TURNON_KEY];
+  }
+
+  if(data[RPC_TURNOFF_KEY]){
+    turnOffSchedule = data[RPC_TURNOFF_KEY];
+  }
+}
+
+
 void InitWiFi() {
   Serial.println("Connecting to AP ...");
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -389,11 +396,12 @@ void setup() {
 
   // WiFi.softAPConfig(local_ip, gateway, subnet);
   // WiFi.softAP(WLAN_SSID, WLAN_PASS);
-
+  
   xTaskCreate(WifiTask, "Wifi", 4096, NULL, 4, NULL);
-  xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 2, NULL);
-  xTaskCreate(TaskTemperature_Humidity, "Temp & Humid", 2048, NULL, 2, NULL);
+  xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 2, &xHandle);
+  xTaskCreate(TaskTemperature_Humidity, "Temp & Humid", 2048, NULL, 2, &xdht20Handle);
   xTaskCreate(ThingsBoardTask, "Thingsboard", 4096, NULL, 1, NULL);
+  xTaskCreate(TaskScheduler, "Scheduler", 4096, NULL, 5, NULL);
   // xTaskCreate(onMessageReceived, "Temp & Humid", 2048, NULL, 3, NULL);
   // xTaskCreate(onSubscriptionSuccess, "Temp & Humid", 2048, NULL, 3, NULL);
 }
