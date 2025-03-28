@@ -1,16 +1,8 @@
-#include <Arduino.h>
-#include <DHT20.h>
-#include <Server_Side_RPC.h>
+#include "main.h"
 
-#include <WiFi.h>
-#include <Arduino_MQTT_Client.h>
-#include <ThingsBoard.h>
-#include "DHT20.h"
-#include "Wire.h"
-#include <ArduinoOTA.h>
-
-constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
-constexpr char WIFI_PASSWORD[] = "";
+// constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
+constexpr char WIFI_SSID[] = "ACLAB";
+constexpr char WIFI_PASSWORD[] = "ACLAB2023";
 // constexpr char WLAN_SSID[] = "RNM esp sida";
 // constexpr char WLAN_PASS[] = "whyarewestillhere";
 
@@ -82,12 +74,6 @@ const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 7;
 const int   daylightOffset_sec = 3600;
 
-
-
-#define LED GPIO_NUM_48
-#define SDA GPIO_NUM_11
-#define SCL GPIO_NUM_12
-
 // DHT20 dht20;
 float temp = 29.0;
 float humid = 40.0;
@@ -99,6 +85,23 @@ bool subscribed = false;
 constexpr char RPC_TEMPERATURE_KEY[] = "dht20State";
 constexpr char RPC_TURNON_KEY[] = "turnOnPeriod";
 constexpr char RPC_TURNOFF_KEY[] = "turnOffPeriod";
+
+// Callback function for RPC response
+void processDHT20State(const JsonVariantConst &data, JsonDocument &response) {
+  dht20State = data[RPC_TEMPERATURE_KEY];
+  Serial.print("DHT20 state: ");
+  Serial.println(dht20State);
+}
+
+void processDHT20Scheduler(const JsonVariantConst &data, JsonDocument &response) {
+  if(data[RPC_TURNON_KEY]){
+    turnOnSchedule = data[RPC_TURNON_KEY];
+  }
+
+  if(data[RPC_TURNOFF_KEY]){
+    turnOffSchedule = data[RPC_TURNOFF_KEY];
+  }
+}
 
 void TaskLEDControl(void *pvParameters) {
   pinMode(LED, OUTPUT); // Initialize LED pin
@@ -348,23 +351,6 @@ void onSubscriptionSuccess(void *pvParameters) {
   //   Serial.println("Schedule set: " + schedule);
   // }
 //}
-
-// Callback function for RPC response
-void processDHT20State(const JsonVariantConst &data, JsonDocument &response) {
-  dht20State = data[RPC_TEMPERATURE_KEY];
-  Serial.print("DHT20 state: ");
-  Serial.println(dht20State);
-}
-
-void processDHT20Scheduler(const JsonVariantConst &data, JsonDocument &response) {
-  if(data[RPC_TURNON_KEY]){
-    turnOnSchedule = data[RPC_TURNON_KEY];
-  }
-
-  if(data[RPC_TURNOFF_KEY]){
-    turnOffSchedule = data[RPC_TURNOFF_KEY];
-  }
-}
 
 
 void InitWiFi() {
