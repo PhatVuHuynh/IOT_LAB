@@ -1,94 +1,94 @@
-// #ifdef ESP8266
-// #include <ESP8266WiFi.h>
-// #else
-// #ifdef ESP32
-// #include <WiFi.h>
-// #endif // ESP32
-// #endif // ESP8266
+// // #ifdef ESP8266
+// // #include <ESP8266WiFi.h>
+// // #else
+// // #ifdef ESP32
+// // #include <WiFi.h>
+// // #endif // ESP32
+// // #endif // ESP8266
 
-// #include <Arduino_MQTT_Client.h>
-// #include <ThingsBoard.h>
+// // #include <Arduino_MQTT_Client.h>
+// // #include <ThingsBoard.h>
 
-// #define ENCRYPTED false
+// // #define ENCRYPTED false
 
-// constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
-// constexpr char WIFI_PASSWORD[] = "";
-// constexpr char TOKEN[] = "d3P1weVrXAvkGj2bqkDW";
-// constexpr char THINGSBOARD_SERVER[] = "app.coreiot.io";
+// // constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
+// // constexpr char WIFI_PASSWORD[] = "";
+// // constexpr char TOKEN[] = "d3P1weVrXAvkGj2bqkDW";
+// // constexpr char THINGSBOARD_SERVER[] = "app.coreiot.io";
 
-// #if ENCRYPTED
-// constexpr uint16_t THINGSBOARD_PORT = 8883U;
-// #else
-// constexpr uint16_t THINGSBOARD_PORT = 1883U;
-// #endif
+// // #if ENCRYPTED
+// // constexpr uint16_t THINGSBOARD_PORT = 8883U;
+// // #else
+// // constexpr uint16_t THINGSBOARD_PORT = 1883U;
+// // #endif
 
-// constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 256U;
-// constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 256U;
-// constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
+// // constexpr uint16_t MAX_MESSAGE_SEND_SIZE = 256U;
+// // constexpr uint16_t MAX_MESSAGE_RECEIVE_SIZE = 256U;
+// // constexpr uint32_t SERIAL_DEBUG_BAUD = 115200U;
 
-// #if ENCRYPTED
-// WiFiClientSecure espClient;
-// #else
-// WiFiClient espClient;
-// #endif
+// // #if ENCRYPTED
+// // WiFiClientSecure espClient;
+// // #else
+// // WiFiClient espClient;
+// // #endif
 
-// Arduino_MQTT_Client mqttClient(espClient);
-// ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE);
+// // Arduino_MQTT_Client mqttClient(espClient);
+// // ThingsBoard tb(mqttClient, MAX_MESSAGE_RECEIVE_SIZE, MAX_MESSAGE_SEND_SIZE);
 
-// void InitWiFi() {
-//   Serial.println("Connecting to AP ...");
-//   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-//   while (WiFi.status() != WL_CONNECTED) {
-//     delay(500);
-//     Serial.print(".");
-//   }
-//   Serial.println("Connected to AP");
-// }
+// // void InitWiFi() {
+// //   Serial.println("Connecting to AP ...");
+// //   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+// //   while (WiFi.status() != WL_CONNECTED) {
+// //     delay(500);
+// //     Serial.print(".");
+// //   }
+// //   Serial.println("Connected to AP");
+// // }
 
-// bool reconnect() {
-//   if (WiFi.status() == WL_CONNECTED) {
-//     return true;
-//   }
-//   InitWiFi();
-//   return true;
-// }
+// // bool reconnect() {
+// //   if (WiFi.status() == WL_CONNECTED) {
+// //     return true;
+// //   }
+// //   InitWiFi();
+// //   return true;
+// // }
 
-// void setup() {
-//   Serial.begin(SERIAL_DEBUG_BAUD);
-//   delay(1000);
-//   InitWiFi();
-// }
+// // void setup() {
+// //   Serial.begin(SERIAL_DEBUG_BAUD);
+// //   delay(1000);
+// //   InitWiFi();
+// // }
 
-// void loop() {
-//   delay(1000);
+// // void loop() {
+// //   delay(1000);
 
-//   if (!reconnect()) {
-//     return;
-//   }
+// //   if (!reconnect()) {
+// //     return;
+// //   }
 
-//   if (!tb.connected()) {
-//     Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
-//     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
-//       Serial.println("Failed to connect");
-//       return;
-//     }
-//   }
+// //   if (!tb.connected()) {
+// //     Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, TOKEN);
+// //     if (!tb.connect(THINGSBOARD_SERVER, TOKEN, THINGSBOARD_PORT)) {
+// //       Serial.println("Failed to connect");
+// //       return;
+// //     }
+// //   }
 
-//   // Create a JSON document
-//   StaticJsonDocument<256> doc;
-//   doc["temperature"] = random(20, 30);  // Example: Simulating a temperature reading
+// //   // Create a JSON document
+// //   StaticJsonDocument<256> doc;
+// //   doc["temperature"] = random(20, 30);  // Example: Simulating a temperature reading
 
-//   // Serialize the JSON document
-//   char buffer[256];
-//   size_t len = serializeJson(doc, buffer, sizeof(buffer));
+// //   // Serialize the JSON document
+// //   char buffer[256];
+// //   size_t len = serializeJson(doc, buffer, sizeof(buffer));
 
-//   // Send telemetry data
-//   if (!tb.sendTelemetryJson(doc, len)) {
-//     Serial.println("Failed to send telemetry");
-//   }
+// //   // Send telemetry data
+// //   if (!tb.sendTelemetryJson(doc, len)) {
+// //     Serial.println("Failed to send telemetry");
+// //   }
 
-//   tb.loop();
-// }
+// //   tb.loop();
+// // }
 
 
 #include <Arduino.h>
@@ -99,10 +99,10 @@
 #include <ThingsBoard.h>
 #include "DHT20.h"
 #include "Wire.h"
-#include <ArduinoOTA.h>
+// #include <ArduinoOTA.h>
 
-constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
-constexpr char WIFI_PASSWORD[] = "";
+constexpr char WIFI_SSID[] = "ACLAB";
+constexpr char WIFI_PASSWORD[] = "ACLAB2023";
 // constexpr char WLAN_SSID[] = "RNM esp sida";
 // constexpr char WLAN_PASS[] = "whyarewestillhere";
 
@@ -110,7 +110,8 @@ IPAddress local_ip(192,168,1,1);
 IPAddress gateway(192,168,1,1);
 IPAddress subnet(255,255,255,0);
 
-constexpr char DHT20_TOKEN[] = "d3P1weVrXAvkGj2bqkDW";
+constexpr char DHT20_TOKEN[] = "s0uon5xr11cfwn6urwxt"; //new device
+// constexpr char DHT20_TOKEN[] = "d3P1weVrXAvkGj2bqkDW"; //old device (telemetry don't exhibit)
 
 constexpr char THINGSBOARD_SERVER[] = "app.coreiot.io";
 constexpr uint16_t THINGSBOARD_PORT = 1883U;
@@ -182,7 +183,7 @@ void TaskLEDControl(void *pvParameters) {
     // Serial.print(LED); Serial.print(" ");
     // Serial.print(digitalRead(pin));
     // Serial.println();
-    Serial.println("Hello word");
+    // Serial.println("Hello word");
     if (ledState == 0) {
       digitalWrite(LED, HIGH); // Turn ON LED
     } else {
@@ -210,8 +211,8 @@ void TaskTemperature_Humidity(void *pvParameters){
     temp = dht20.getTemperature();
     humid = dht20.getHumidity();
 
-    Serial.print("Temp: "); Serial.print(temp); Serial.print(" *C ");
-    Serial.print(" Humidity: "); Serial.print(humid); Serial.print(" %");
+    // Serial.print("Temp: "); Serial.print(temp); Serial.print(" *C ");
+    // Serial.print(" Humidity: "); Serial.print(humid); Serial.print(" %");
     Serial.println();
     
     // temp += 1;
@@ -235,7 +236,7 @@ void ThingsBoardTask(void *pvParameters) {
           Serial.print("-");
           vTaskDelay(500 / portTICK_PERIOD_MS);
       }
-      Serial.println("Connected to ThingsBoard");
+      // Serial.println("Connected to ThingsBoard");
       tb.loop();
       // String collectData = String("{\"temperature\":") + temp +
       //                    ",\"humidity\":" + humid +
@@ -381,8 +382,8 @@ bool reconnect() {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(SERIAL_DEBUG_BAUD);
-  delay(1000);
-  // InitWiFi();
+  // delay(1000);
+  InitWiFi();
   
   // wifiClient.connect(THINGSBOARD_SERVER, THINGSBOARD_PORT);
   // wifiClient.connected();
@@ -390,7 +391,7 @@ void setup() {
   // WiFi.softAPConfig(local_ip, gateway, subnet);
   // WiFi.softAP(WLAN_SSID, WLAN_PASS);
 
-  xTaskCreate(WifiTask, "Wifi", 4096, NULL, 4, NULL);
+  // xTaskCreate(WifiTask, "Wifi", 4096, NULL, 4, NULL);
   xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 2, NULL);
   xTaskCreate(TaskTemperature_Humidity, "Temp & Humid", 2048, NULL, 2, NULL);
   xTaskCreate(ThingsBoardTask, "Thingsboard", 4096, NULL, 1, NULL);

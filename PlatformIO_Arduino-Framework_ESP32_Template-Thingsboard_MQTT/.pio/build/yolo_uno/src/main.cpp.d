@@ -212,8 +212,4 @@
  lib/TBPubSubClient/src/PubSubClient.h lib/ThingsBoard/src/ThingsBoard.h \
  lib/ThingsBoard/src/Constants.h \
  lib/ThingsBoard/src/IAPI_Implementation.h \
- lib/ThingsBoard/src/API_Process_Type.h lib/ThingsBoard/src/Telemetry.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src/ArduinoOTA.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/Update/src/Update.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/MD5Builder.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/esp_rom/include/esp_rom_md5.h
+ lib/ThingsBoard/src/API_Process_Type.h lib/ThingsBoard/src/Telemetry.h
