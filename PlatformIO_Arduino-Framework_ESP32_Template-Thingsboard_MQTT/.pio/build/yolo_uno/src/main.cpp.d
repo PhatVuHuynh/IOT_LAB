@@ -192,6 +192,9 @@
  lib/ThingsBoard/src/IAPI_Implementation.h \
  lib/ThingsBoard/src/DefaultLogger.h \
  lib/ThingsBoard/src/API_Process_Type.h \
+ lib/ThingsBoard/src/Attribute_Request.h \
+ lib/ThingsBoard/src/Attribute_Request_Callback.h \
+ lib/ThingsBoard/src/Callback_Watchdog.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFi.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/Print.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/IPv6Address.h \
