@@ -29,6 +29,9 @@ class Espressif_Updater : public IUpdater {
         esp_partition_t const * running = esp_ota_get_running_partition();
         esp_partition_t const * configured = esp_ota_get_boot_partition();
 
+        Logger::printfln("running: %x, %d, %d, %d", running->address, running->encrypted, running->flash_chip->chip_id, running->size, running->subtype, running->type);
+        Logger::printfln("configured: %x, %d, %d, %d", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
+        
         if (configured != running) {
             Logger::printfln(INVALID_OTA_PARTIION);
             return false;

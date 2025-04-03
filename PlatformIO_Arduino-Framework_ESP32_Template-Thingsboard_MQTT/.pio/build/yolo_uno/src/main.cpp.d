@@ -195,6 +195,9 @@
  lib/ThingsBoard/src/Attribute_Request.h \
  lib/ThingsBoard/src/Attribute_Request_Callback.h \
  lib/ThingsBoard/src/Callback_Watchdog.h \
+ lib/ThingsBoard/src/Arduino_MQTT_Client.h \
+ lib/ThingsBoard/src/IMQTT_Client.h lib/TBPubSubClient/src/PubSubClient.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/Client.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFi.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/Print.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/IPv6Address.h \
@@ -209,16 +212,78 @@
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFiAP.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFiScan.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFiClient.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/Client.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFiServer.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/Server.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src/WiFiUdp.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/Udp.h \
  C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/cbuf.h \
- lib/ThingsBoard/src/Arduino_MQTT_Client.h \
- lib/ThingsBoard/src/IMQTT_Client.h lib/TBPubSubClient/src/PubSubClient.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src/WiFiClientSecure.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src/ssl_client.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/platform.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/port/include/mbedtls/esp_config.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/config.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/check_config.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/port/include/esp_mem.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/platform_time.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/net.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/net_sockets.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ssl.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/port/include/mbedtls/bignum.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/bignum.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ecp.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ssl_ciphersuites.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/pk.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/md.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/platform_util.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/rsa.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ecdsa.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/cipher.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/x509_crt.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/x509.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/asn1.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/x509_crl.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/dhm.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ecdh.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/debug.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/entropy.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/sha512.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/port/include/sha512_alt.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/hal/include/hal/sha_types.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/esp_rom/include/esp32s3/rom/sha.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ctr_drbg.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/aes.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/port/include/aes_alt.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/port/include/aes/esp_aes.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/hal/include/hal/aes_types.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/error.h \
+ lib/ThingsBoard/src/OTA_Firmware_Update.h \
+ lib/ThingsBoard/src/Attribute_Request.h \
+ lib/ThingsBoard/src/Shared_Attribute_Update.h \
+ lib/ThingsBoard/src/Shared_Attribute_Callback.h \
+ lib/ThingsBoard/src/OTA_Handler.h lib/ThingsBoard/src/HashGenerator.h \
+ lib/ThingsBoard/src/OTA_Update_Callback.h lib/ThingsBoard/src/IUpdater.h \
+ lib/ThingsBoard/src/OTA_Failure_Response.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/Update/src/HttpsOTAUpdate.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/esp_http_client/include/esp_http_client.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/nghttp/port/include/http_parser.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/port/esp32/include/sys/socket.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/sockets.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/newlib/platform_include/sys/poll.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/netif.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/pbuf.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/stats.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/mem.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/memp.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/priv/memp_std.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/priv/memp_priv.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/priv/mem_priv.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/inet.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/errno.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/newlib/platform_include/net/if.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/if_api.h \
  lib/ThingsBoard/src/ThingsBoard.h lib/ThingsBoard/src/Telemetry.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/ArduinoOTA/src/ArduinoOTA.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/libraries/Update/src/Update.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/cores/esp32/MD5Builder.h \
- C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/esp_rom/include/esp_rom_md5.h
+ lib/ThingsBoard/src/Espressif_Updater.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/app_update/include/esp_ota_ops.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/bootloader_support/include/esp_image_format.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/bootloader_support/include/esp_flash_partitions.h \
+ C:/Users/ADMIN/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32s3/include/bootloader_support/include/esp_app_format.h

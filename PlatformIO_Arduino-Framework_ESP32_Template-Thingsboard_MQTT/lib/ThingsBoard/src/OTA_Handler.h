@@ -120,6 +120,7 @@ class OTA_Handler {
 
         if (current_chunk == 0U) {
             // Initialize Flash
+            Logger::printfln("firm size %d", m_fw_size);
             if (!m_fw_updater->begin(m_fw_size)) {
                 Logger::printfln(ERROR_UPDATE_BEGIN);
                 return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_BEGIN);
@@ -171,7 +172,7 @@ class OTA_Handler {
     /// @return Whether the received chunk has the expected size or not
     bool Received_Valid_Chunk_Size(size_t const & received_chunk_size, size_t & expected_chunk_size) {
         bool const is_last_chunk = m_requested_chunks + 1 >= m_total_chunks;
-        if (is_last_chunk) {
+        if (is_last_chunk) {    
             size_t const last_chunk_expected_size = m_fw_size % m_fw_callback->Get_Chunk_Size();
             expected_chunk_size = last_chunk_expected_size;
             return received_chunk_size == last_chunk_expected_size;

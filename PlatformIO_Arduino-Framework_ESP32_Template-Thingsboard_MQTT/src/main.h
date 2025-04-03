@@ -6,12 +6,31 @@
 #include <Server_Side_RPC.h>
 #include <Attribute_Request.h>
 
-#include <WiFi.h>
 #include <Arduino_MQTT_Client.h>
-#include <ThingsBoard.h>
 #include "DHT20.h"
 #include "Wire.h"
-#include <ArduinoOTA.h>
+
+#ifdef ESP8266
+#include <ESP8266WiFi.h>
+#else
+#ifdef ESP32
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#endif // ESP32
+#endif // ESP8266
+
+#include <Arduino_MQTT_Client.h>
+#include <OTA_Firmware_Update.h>
+#include "HttpsOTAUpdate.h"
+#include <ThingsBoard.h>
+
+#ifdef ESP8266
+#include <Arduino_ESP8266_Updater.h>
+#else
+#ifdef ESP32
+#include <Espressif_Updater.h>
+#endif // ESP32
+#endif // ESP8266
 
 #define LED GPIO_NUM_48
 #define SDA GPIO_NUM_11
@@ -25,8 +44,11 @@
 
 void requestTimedOut();
 void processSharedAttributeRequest(const JsonObjectConst &data) ;
-// void processDHT20State(const JsonVariantConst &data, JsonDocument &response);
 void processTeleSuccess(const JsonVariantConst &data, JsonDocument &response);
+
+bool reconnect();
+void InitWiFi();
+void dht20Power(uint64_t turnOnEpoch, uint64_t turnOffEpoch, char turnOnPeriod[], char turnOffPeriod[]);
 
 void TaskLEDControl(void *pvParameters);
 void TaskTemperature_Humidity(void *pvParameters);
