@@ -1,10 +1,10 @@
 #include "main.h"
 
 // constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
-// constexpr char WIFI_SSID[] = "ACLAB";
-// constexpr char WIFI_PASSWORD[] = "ACLAB2023";
-constexpr char WIFI_SSID[] = "GUEST";
-constexpr char WIFI_PASSWORD[] = "tmagroup2025";
+constexpr char WIFI_SSID[] = "ACLAB";
+constexpr char WIFI_PASSWORD[] = "ACLAB2023";
+// constexpr char WIFI_SSID[] = "GUEST";
+// constexpr char WIFI_PASSWORD[] = "tmagroup2025";
 // constexpr char WLAN_SSID[] = "RNM esp sida";
 // constexpr char WLAN_PASS[] = "whyarewestillhere";
 
@@ -225,10 +225,10 @@ void ThingsBoardTask(void *pvParameters) {
     
     while (1)
     {
-      if (!reconnect()) {
-        Serial.println("Cant Reconect WIFI");
-        return;
-      }
+      // if (!reconnect()) {
+      //   Serial.println("Cant Reconect WIFI");
+      //   return;
+      // }
       
       // if (!tb.connected()) {
       //   // Serial.printf("Scheduler Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, DHT20_TOKEN);
@@ -400,7 +400,7 @@ void setup() {
   // WiFi.softAP(WLAN_SSID, WLAN_PASS);
   
   // xTaskCreate(WifiTask, "Wifi", 4096, NULL, 5, NULL);
-  xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 1, NULL);
+  // xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 1, NULL);
   xTaskCreate(TaskTemperature_Humidity, "Temp & Humid", 2048, NULL, 4, &xdht20Handle);
   xTaskCreate(ThingsBoardTask, "Thingsboard", 4096, NULL, 3, &xThingsHandle);
   xTaskCreate(TaskScheduler, "Scheduler", 4096, NULL, 2, NULL);
