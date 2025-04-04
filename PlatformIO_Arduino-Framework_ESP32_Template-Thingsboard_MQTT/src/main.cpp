@@ -13,10 +13,10 @@ constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 12U;
 constexpr uint16_t FIRMWARE_PACKET_SIZE = 4096U;
 
 // constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
-// constexpr char WIFI_SSID[] = "ACLAB";
-// constexpr char WIFI_PASSWORD[] = "ACLAB2023";
-constexpr char WIFI_SSID[] = "GUEST";
-constexpr char WIFI_PASSWORD[] = "tmagroup2025";
+constexpr char WIFI_SSID[] = "ACLAB";
+constexpr char WIFI_PASSWORD[] = "ACLAB2023";
+// constexpr char WIFI_SSID[] = "GUEST";
+// constexpr char WIFI_PASSWORD[] = "tmagroup2025";
 // constexpr char WIFI_SSID[] = "601H6-KH&KTMT";
 // constexpr char WIFI_PASSWORD[] = "svkhktmt";
 
