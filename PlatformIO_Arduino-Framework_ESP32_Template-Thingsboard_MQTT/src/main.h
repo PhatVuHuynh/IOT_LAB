@@ -23,6 +23,8 @@
 #include <OTA_Firmware_Update.h>
 #include "HttpsOTAUpdate.h"
 #include <ThingsBoard.h>
+#include <esp_ota_ops.h>
+#include <esp_partition.h>
 
 #ifdef ESP8266
 #include <Arduino_ESP8266_Updater.h>

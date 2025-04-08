@@ -13,10 +13,10 @@ constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 12U;
 constexpr uint16_t FIRMWARE_PACKET_SIZE = 4096U;
 
 // constexpr char WIFI_SSID[] = "RD-SEAI_2.4G";
-constexpr char WIFI_SSID[] = "ACLAB";
-constexpr char WIFI_PASSWORD[] = "ACLAB2023";
-// constexpr char WIFI_SSID[] = "GUEST";
-// constexpr char WIFI_PASSWORD[] = "tmagroup2025";
+// constexpr char WIFI_SSID[] = "ACLAB";
+// constexpr char WIFI_PASSWORD[] = "ACLAB2023";
+constexpr char WIFI_SSID[] = "GUEST";
+constexpr char WIFI_PASSWORD[] = "tmagroup2025";
 // constexpr char WIFI_SSID[] = "601H6-KH&KTMT";
 // constexpr char WIFI_PASSWORD[] = "svkhktmt";
 
@@ -140,7 +140,46 @@ bool updateRequestSent = false;
 
 void update_starting_callback() {
   vTaskSuspend(xThingsHandle);
+
+  const esp_partition_t* ota_0 = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
+    
+  if (ota_0 == NULL) {
+      Serial.printf("Cant find ota0\n");
+      return;
+  }
+
+  const esp_partition_t* factory = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_FACTORY, NULL);
+    
+  if (ota_0 == NULL) {
+      Serial.printf("Cant find factory\n");
+      return;
+  }
+  // esp_err_t err = esp_ota_set_boot_partition(ota_0);
+  // if (err != ESP_OK) {
+  //     // Serial.printf("Cant set boot factory\n");
+  //     Serial.printf("Cant set boot ota0\n");
+  //     return;
+  // }
   // Nothing to do
+}
+
+static bool diagnostic(void)
+{
+    gpio_config_t io_conf;
+    io_conf.intr_type    = GPIO_INTR_DISABLE;
+    io_conf.mode         = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = (1ULL << LED);
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    io_conf.pull_up_en   = GPIO_PULLUP_ENABLE;
+    gpio_config(&io_conf);
+
+    ESP_LOGI(TAG, "Diagnostics (5 sec)...");
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+
+    bool diagnostic_is_ok = gpio_get_level(LED);
+
+    gpio_reset_pin(LED);
+    return diagnostic_is_ok;
 }
 
 /// @brief End callback method that will be called as soon as the OTA firmware update, either finished successfully or failed.
@@ -149,7 +188,6 @@ void update_starting_callback() {
 void finished_callback(const bool & success) {
   if (success) {
     Serial.println("Done, Reboot now");
-
 #ifdef ESP8266
     ESP.restart();
 #else
@@ -451,6 +489,22 @@ void setup() {
     Serial.println("Cant Reconect WIFI");
     return;
   }
+
+  const esp_partition_t *running = esp_ota_get_running_partition();
+  esp_ota_img_states_t ota_state;
+  if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+      if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+          // run diagnostic function ...
+          bool diagnostic_is_ok = diagnostic();
+          if (diagnostic_is_ok) {
+              Serial.println("Diagnostics completed successfully! Continuing execution ...");
+              esp_ota_mark_app_valid_cancel_rollback();
+          } else {
+              Serial.println("Diagnostics failed! Start rollback to the previous version ...");
+              esp_ota_mark_app_invalid_rollback_and_reboot();
+          }
+      }
+  }
   // InitWiFi();
   
   // WiFi.softAPConfig(local_ip, gateway, subnet);
@@ -459,7 +513,7 @@ void setup() {
   xTaskCreate(WifiTask, "Wifi", 4096, NULL, 5, NULL);
   xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 1, NULL);
   xTaskCreate(TaskTemperature_Humidity, "Temp & Humid", 2048, NULL, 4, &xdht20Handle);
-  xTaskCreate(ThingsBoardTask, "Thingsboard", 4096, NULL, 3, &xThingsHandle);
+  xTaskCreate(ThingsBoardTask, "Thingsboard", 8192, NULL, 3, &xThingsHandle);
   // xTaskCreate(TaskScheduler, "Scheduler", 4096, NULL, 2, NULL);
   // xTaskCreate(onMessageReceived, "Temp & Humid", 2048, NULL, 3, NULL);
   // xTaskCreate(onSubscriptionSuccess, "Temp & Humid", 2048, NULL, 3, NULL);
@@ -474,8 +528,15 @@ void loop() {
       return;
     }
   }
-  // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
 
+  esp_partition_t const * running = esp_ota_get_running_partition();
+  esp_partition_t const * configured = esp_ota_get_boot_partition();
+  
+  Serial.printf("running: %x, %d, %d, %d\n", running->address, running->encrypted, running->flash_chip->chip_id, running->size, running->subtype, running->type);
+  Serial.printf("configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
+  esp_ota_set_boot_partition(running);
+  Serial.printf("new configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
+  // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
   if (!currentFWSent) {
     currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
   }
@@ -485,6 +546,7 @@ void loop() {
     OTA_Update_Callback callback(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, &finished_callback, &progress_callback, &update_starting_callback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE, REQUEST_TIMEOUT_MICROSECONDS);
     callback.Set_Timeout(REQUEST_TIMEOUT_MICROSECONDS);
     updateRequestSent = ota.Subscribe_Firmware_Update(callback);
+    // ota.Process_Response();
     // updateRequestSent = ota.Start_Firmware_Update(callback);
   }
 
@@ -529,6 +591,4 @@ void loop() {
   
   
     vTaskDelay(pdMS_TO_TICKS(3000));
-    // ota.Unsubscribe();
-    // Serial.println("1s");
 }

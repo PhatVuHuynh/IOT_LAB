@@ -186,6 +186,7 @@ class OTA_Firmware_Update : public IAPI_Implementation {
         char response_topic[Helper::detectSize(FIRMWARE_RESPONSE_TOPIC, request_id)] = {};
         (void)snprintf(response_topic, sizeof(response_topic), FIRMWARE_RESPONSE_TOPIC, request_id);
         size_t const chunk = Helper::parseRequestId(response_topic, topic);
+        // Serial.printf("chunk %d, req id %d, payload %c\n", chunk, request_id, payload[0]);
         m_ota.Process_Firmware_Packet(chunk, payload, length);
     }
 

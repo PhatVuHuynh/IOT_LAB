@@ -120,7 +120,7 @@ class OTA_Handler {
 
         if (current_chunk == 0U) {
             // Initialize Flash
-            Logger::printfln("firm size %d", m_fw_size);
+            // Logger::printfln("firm size %d", m_fw_size);
             if (!m_fw_updater->begin(m_fw_size)) {
                 Logger::printfln(ERROR_UPDATE_BEGIN);
                 return Handle_Failure(OTA_Failure_Response::RETRY_UPDATE, ERROR_UPDATE_BEGIN);
