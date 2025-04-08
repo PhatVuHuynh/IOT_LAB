@@ -3,7 +3,7 @@
 // Firmware title and version used to compare with remote version, to check if an update is needed.
 // Title needs to be the same and version needs to be different --> downgrading is possible
 constexpr char CURRENT_FIRMWARE_TITLE[] = "dht20";
-constexpr char CURRENT_FIRMWARE_VERSION[] = "1.2";
+constexpr char CURRENT_FIRMWARE_VERSION[] = "1.3";
 
 // Maximum amount of retries we attempt to download each firmware chunck over MQTT
 constexpr uint8_t FIRMWARE_FAILURE_RETRIES = 12U;
@@ -71,6 +71,7 @@ struct tm timeinfo;
 
 TaskHandle_t xdht20Handle = NULL;
 TaskHandle_t xThingsHandle = NULL;
+TaskHandle_t xScheHandle = NULL;
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0;
@@ -138,13 +139,21 @@ Espressif_Updater<> updater;
 bool currentFWSent = false;
 bool updateRequestSent = false;
 
-void update_starting_callback() {
+void update_starting_callback(void) {
   vTaskSuspend(xThingsHandle);
+  vTaskSuspend(xScheHandle);
 
   const esp_partition_t* ota_0 = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, NULL);
     
   if (ota_0 == NULL) {
       Serial.printf("Cant find ota0\n");
+      return;
+  }
+
+  const esp_partition_t* ota_1 = esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, NULL);
+    
+  if (ota_1 == NULL) {
+      Serial.printf("Cant find ota1\n");
       return;
   }
 
@@ -198,7 +207,6 @@ void finished_callback(const bool & success) {
     return;
   }
   Serial.println("Downloading firmware failed");
-  vTaskResume(xThingsHandle);
 }
 
 void progress_callback(const size_t & current, const size_t & total) {
@@ -481,6 +489,55 @@ void TaskScheduler(void *pvParameters) {
   vTaskDelete(NULL);
 }
 
+void TaskOTA(void *pvParameters) {
+  while(1){
+    if (!reconnect()) {
+      Serial.println("Cant Reconect WIFI");
+      return;
+    }
+    
+    Serial.printf("Cur fw ver %s\n", CURRENT_FIRMWARE_VERSION);
+    if (!tb.connected()) {
+      Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, DHT20_TOKEN);
+      if (!tb.connect(THINGSBOARD_SERVER, DHT20_TOKEN, THINGSBOARD_PORT)) {
+        Serial.println("Failed to connect");
+        return;
+      }
+    }
+
+    esp_partition_t const * running = esp_ota_get_running_partition();
+    esp_partition_t const * configured = esp_ota_get_boot_partition();
+    esp_ota_set_boot_partition(running);
+
+    Serial.printf("running: %x, %d, %d, %d\n", running->address, running->encrypted, running->flash_chip->chip_id, running->size, running->subtype, running->type);
+    Serial.printf("configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
+    // Serial.printf("new configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
+    
+    // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
+    if (!currentFWSent) {
+      currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
+    }
+
+    if (!updateRequestSent) {
+      Serial.println("Firwmare Update Subscription...");
+      OTA_Update_Callback callback(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, &finished_callback, &progress_callback, &update_starting_callback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE, REQUEST_TIMEOUT_MICROSECONDS);
+      callback.Set_Timeout(REQUEST_TIMEOUT_MICROSECONDS);
+      updateRequestSent = ota.Subscribe_Firmware_Update(callback);
+      // ota.Process_Response();
+      // updateRequestSent = ota.Start_Firmware_Update(callback);
+    }
+
+    // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
+
+
+    tb.loop();
+    
+    vTaskDelay(pdMS_TO_TICKS(3000));
+  }
+
+  vTaskDelete(NULL);
+}
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(SERIAL_DEBUG_BAUD);
@@ -510,50 +567,49 @@ void setup() {
   // WiFi.softAPConfig(local_ip, gateway, subnet);
   // WiFi.softAP(WLAN_SSID, WLAN_PASS);
   
-  xTaskCreate(WifiTask, "Wifi", 4096, NULL, 5, NULL);
+  // xTaskCreate(WifiTask, "Wifi", 4096, NULL, 6, NULL);
   xTaskCreate(TaskLEDControl, "LED Control", 2048, NULL, 1, NULL);
   xTaskCreate(TaskTemperature_Humidity, "Temp & Humid", 2048, NULL, 4, &xdht20Handle);
   xTaskCreate(ThingsBoardTask, "Thingsboard", 8192, NULL, 3, &xThingsHandle);
-  // xTaskCreate(TaskScheduler, "Scheduler", 4096, NULL, 2, NULL);
-  // xTaskCreate(onMessageReceived, "Temp & Humid", 2048, NULL, 3, NULL);
-  // xTaskCreate(onSubscriptionSuccess, "Temp & Humid", 2048, NULL, 3, NULL);
+  xTaskCreate(TaskScheduler, "Scheduler", 8192, NULL, 2, &xScheHandle);
+  xTaskCreate(TaskOTA, "OTA", 8192, NULL, 5, NULL);
 }
 
 void loop() {
-  Serial.printf("Cur fw ver %s\n", CURRENT_FIRMWARE_VERSION);
-  if (!tb.connected()) {
-    Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, DHT20_TOKEN);
-    if (!tb.connect(THINGSBOARD_SERVER, DHT20_TOKEN, THINGSBOARD_PORT)) {
-      Serial.println("Failed to connect");
-      return;
-    }
-  }
+  // Serial.printf("Cur fw ver %s\n", CURRENT_FIRMWARE_VERSION);
+  // if (!tb.connected()) {
+  //   Serial.printf("Connecting to: (%s) with token (%s)\n", THINGSBOARD_SERVER, DHT20_TOKEN);
+  //   if (!tb.connect(THINGSBOARD_SERVER, DHT20_TOKEN, THINGSBOARD_PORT)) {
+  //     Serial.println("Failed to connect");
+  //     return;
+  //   }
+  // }
 
-  esp_partition_t const * running = esp_ota_get_running_partition();
-  esp_partition_t const * configured = esp_ota_get_boot_partition();
+  // esp_partition_t const * running = esp_ota_get_running_partition();
+  // esp_partition_t const * configured = esp_ota_get_boot_partition();
   
-  Serial.printf("running: %x, %d, %d, %d\n", running->address, running->encrypted, running->flash_chip->chip_id, running->size, running->subtype, running->type);
-  Serial.printf("configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
-  esp_ota_set_boot_partition(running);
-  Serial.printf("new configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
-  // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
-  if (!currentFWSent) {
-    currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
-  }
+  // Serial.printf("running: %x, %d, %d, %d\n", running->address, running->encrypted, running->flash_chip->chip_id, running->size, running->subtype, running->type);
+  // Serial.printf("configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
+  // esp_ota_set_boot_partition(running);
+  // Serial.printf("new configured: %x, %d, %d, %d\n", configured->address, configured->encrypted, configured->flash_chip->chip_id, configured->size, configured->subtype, configured->type);
+  // // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
+  // if (!currentFWSent) {
+  //   currentFWSent = ota.Firmware_Send_Info(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
+  // }
 
-  if (!updateRequestSent) {
-    Serial.println("Firwmare Update Subscription...");
-    OTA_Update_Callback callback(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, &finished_callback, &progress_callback, &update_starting_callback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE, REQUEST_TIMEOUT_MICROSECONDS);
-    callback.Set_Timeout(REQUEST_TIMEOUT_MICROSECONDS);
-    updateRequestSent = ota.Subscribe_Firmware_Update(callback);
-    // ota.Process_Response();
-    // updateRequestSent = ota.Start_Firmware_Update(callback);
-  }
+  // if (!updateRequestSent) {
+  //   Serial.println("Firwmare Update Subscription...");
+  //   OTA_Update_Callback callback(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION, &updater, &finished_callback, &progress_callback, &update_starting_callback, FIRMWARE_FAILURE_RETRIES, FIRMWARE_PACKET_SIZE, REQUEST_TIMEOUT_MICROSECONDS);
+  //   callback.Set_Timeout(REQUEST_TIMEOUT_MICROSECONDS);
+  //   updateRequestSent = ota.Subscribe_Firmware_Update(callback);
+  //   // ota.Process_Response();
+  //   // updateRequestSent = ota.Start_Firmware_Update(callback);
+  // }
 
-  // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
+  // // Serial.printf("sent request: %d, update: %d\n", currentFWSent, updateRequestSent);
 
 
-  tb.loop();
+  // tb.loop();
 
   
 
@@ -590,5 +646,5 @@ void loop() {
   // }
   
   
-    vTaskDelay(pdMS_TO_TICKS(3000));
+    // vTaskDelay(pdMS_TO_TICKS(3000));
 }

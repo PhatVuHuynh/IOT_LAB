@@ -48,14 +48,20 @@ void requestTimedOut();
 void processSharedAttributeRequest(const JsonObjectConst &data) ;
 void processTeleSuccess(const JsonVariantConst &data, JsonDocument &response);
 
+static bool diagnostic(void);
+void progress_callback(const size_t & current, const size_t & total);
+void finished_callback(const bool & success);
+void update_starting_callback(void);
+
 bool reconnect();
 void InitWiFi();
 void dht20Power(uint64_t turnOnEpoch, uint64_t turnOffEpoch, char turnOnPeriod[], char turnOffPeriod[]);
 
+void WifiTask(void *pvParameters);
 void TaskLEDControl(void *pvParameters);
 void TaskTemperature_Humidity(void *pvParameters);
 void ThingsBoardTask(void *pvParameters);
-void WifiTask(void *pvParameters);
 void TaskScheduler(void *pvParameters);
+void TaskOTA(void *pvParameters);
 
 #endif // __MAIN_H
